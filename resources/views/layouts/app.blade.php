@@ -37,6 +37,21 @@
             box-shadow: 3px 0 10px rgba(0,0,0,0.1);
             z-index: 1000;
             overflow-y: auto;
+            /* Untuk mobile: pastikan bisa di-scroll */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Sidebar scroll khusus untuk mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                overflow-y: auto;
+                max-height: 100vh;
+                height: 100%;
+            }
+            .sidebar-menu {
+                max-height: calc(100vh - 200px);
+                overflow-y: auto;
+            }
         }
         .sidebar-header {
             padding: 20px 15px;
@@ -431,12 +446,14 @@
                     </a>
                 @endif
 
-                <div class="mt-4">
-                    <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                <div class="mt-4 px-3">
+                    <form method="POST" action="{{ route('logout') }}" id="logout-form" class="w-100">
                         @csrf
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
+                        <button type="submit" class="btn btn-sm btn-outline-light w-100 d-flex align-items-center justify-content-center" 
+                                style="padding: 8px 15px; border-color: rgba(255,255,255,0.3);">
+                            <i class="bi bi-box-arrow-right me-2"></i>
+                            <span>Logout</span>
+                        </button>
                     </form>
                 </div>
             @endif
@@ -457,7 +474,17 @@
                         <small class="opacity-75">Sistem Presensi Siswa</small>
                     </div>
                 </div>
-                <!-- Tanggal & Jam dipindah ke sidebar -->
+                <!-- Logout button kecil di topbar -->
+                <div class="d-flex align-items-center">
+                    <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-light d-flex align-items-center" 
+                                style="padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="bi bi-box-arrow-right me-1"></i>
+                            <span class="d-none d-md-inline">Logout</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </nav>
 
