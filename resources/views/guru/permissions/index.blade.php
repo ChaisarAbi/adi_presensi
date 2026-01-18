@@ -33,7 +33,7 @@
                                 <th>Kelas</th>
                                 <th>Tanggal Izin</th>
                                 <th>Alasan</th>
-                                <th>Foto Bukti</th>
+        
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -53,17 +53,7 @@
                                             {{ $permission->alasan }}
                                         </div>
                                     </td>
-                                    <td>
-                                        @if($permission->foto_bukti)
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#photoModal{{ $permission->id }}">
-                                                <i class="bi bi-eye"></i> Lihat
-                                            </button>
-                                        @else
-                                            <span class="text-muted">Tidak ada</span>
-                                        @endif
-                                    </td>
+                                    
                                     <td>
                                         <span class="badge {{ $permission->status_badge_class }}">
                                             {{ $permission->status_text }}

@@ -31,7 +31,7 @@
         .sidebar {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            min-height: 100vh;
+            height: 100vh;
             position: fixed;
             width: 250px;
             transition: all 0.3s;
@@ -40,27 +40,33 @@
             overflow-y: auto;
             /* Untuk mobile: pastikan bisa di-scroll */
             -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
+            flex: 1;
+            overflow-y: auto;
         }
         
         /* Sidebar scroll khusus untuk mobile */
         @media (max-width: 768px) {
             .sidebar {
                 overflow-y: auto;
-                max-height: 100vh;
-                height: 100%;
+                height: 100vh;
             }
             .sidebar-menu {
-                max-height: calc(100vh - 200px);
+                max-height: none;
                 overflow-y: auto;
             }
-        }
-        .sidebar-header {
-            padding: 20px 15px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .sidebar-menu {
-            padding: 15px 0;
         }
         .sidebar-menu a {
             color: rgba(255,255,255,0.8);

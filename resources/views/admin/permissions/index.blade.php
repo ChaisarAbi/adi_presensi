@@ -35,7 +35,6 @@
                                 <th>Tanggal</th>
                                 <th>Alasan</th>
                                 <th>Status</th>
-                                <th>Foto Bukti</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -63,35 +62,7 @@
                                             <span class="badge bg-danger">Ditolak</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        @if($permission->foto_bukti)
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#fotoModal{{ $permission->id }}">
-                                                <i class="bi bi-image"></i> Lihat
-                                            </button>
-                                            
-                                            <!-- Modal -->
-                                            <div class="modal fade" id="fotoModal{{ $permission->id }}" tabindex="-1">
-                                                <div class="modal-dialog modal-lg">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Foto Bukti Izin</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center">
-                                                            <img src="{{ asset('storage/' . $permission->foto_bukti) }}" 
-                                                                 class="img-fluid rounded" 
-                                                                 alt="Foto Bukti Izin"
-                                                                 style="max-height: 500px;">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <span class="text-muted">Tidak ada</span>
-                                        @endif
-                                    </td>
+                                    
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             @if($permission->status == 'Pending')
