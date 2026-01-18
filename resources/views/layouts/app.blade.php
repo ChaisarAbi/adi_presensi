@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - Sistem Presensi Siswa</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -559,6 +560,106 @@
                 sidebar.classList.contains('active')) {
                 sidebar.classList.remove('active');
             }
+        });
+        // Handle CSRF token expired and auto logout
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup CSRF token for all AJAX requests
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Intercept fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                // Add CSRF token to headers if not already present
+                if (args[1] && args[1].headers) {
+                    if (!args[1].headers['X-CSRF-TOKEN'] && !args[1].headers['X-CSRF-Token']) {
+                        args[1].headers['X-CSRF-TOKEN'] = csrfToken;
+                    }
+                } else if (args[1]) {
+                    args[1].headers = {
+                        'X-CSRF-TOKEN': csrfToken,
+                        ...args[1].headers
+                    };
+                }
+                
+                return originalFetch.apply(this, args).then(response => {
+                    // Handle 419 Page Expired
+                    if (response.status === 419) {
+                        console.warn('CSRF token expired, redirecting to login');
+                        // Show notification
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                        alertDiv.style.zIndex = '9999';
+                        alertDiv.innerHTML = `
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Session telah berakhir. Silakan login kembali.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.body.appendChild(alertDiv);
+                        
+                        // Auto logout after 3 seconds
+                        setTimeout(() => {
+                            document.getElementById('logout-form')?.submit();
+                        }, 3000);
+                        
+                        return Promise.reject(new Error('CSRF token expired'));
+                    }
+                    return response;
+                });
+            };
+            
+            // Auto logout after 30 minutes of inactivity (sesuai session lifetime)
+            let inactivityTimer;
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                // 30 minutes = 30 * 60 * 1000 = 1,800,000 ms
+                inactivityTimer = setTimeout(() => {
+                    // Check if user is still logged in
+                    fetch('/debug/user', {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message === 'Not authenticated') {
+                            // User sudah logout, redirect ke login
+                            window.location.href = '{{ route("login") }}';
+                        }
+                    })
+                    .catch(() => {
+                        // Jika error, assume session expired
+                        document.getElementById('logout-form')?.submit();
+                    });
+                }, 25 * 60 * 1000); // 25 menit (5 menit sebelum session benar-benar expired)
+            }
+            
+            // Reset timer on user activity
+            ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+                document.addEventListener(event, resetInactivityTimer);
+            });
+            
+            // Start the timer
+            resetInactivityTimer();
+            
+            // Check session status periodically
+            setInterval(() => {
+                fetch('/debug/user', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Not authenticated') {
+                        window.location.href = '{{ route("login") }}';
+                    }
+                })
+                .catch(() => {
+                    // Ignore errors
+                });
+            }, 5 * 60 * 1000); // Check every 5 minutes
         });
     </script>
     @stack('scripts')

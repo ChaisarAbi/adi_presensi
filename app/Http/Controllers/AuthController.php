@@ -27,9 +27,16 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->remember)) {
+            // Invalidate semua session lama untuk user ini
+            $user = Auth::user();
+            
+            // Regenerate session ID untuk mencegah session fixation
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             $request->session()->regenerate();
             
-            $user = Auth::user();
+            // Login ulang user setelah regenerate session
+            Auth::login($user, $request->remember);
             
             // Redirect berdasarkan role
             switch ($user->role) {
