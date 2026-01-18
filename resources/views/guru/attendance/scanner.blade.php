@@ -130,10 +130,10 @@
                 isScanning = true;
                 document.getElementById('startScanner').disabled = true;
                 document.getElementById('stopScanner').disabled = false;
-                showToast('Scanner berhasil diaktifkan', 'success');
+                // Tidak tampilkan pop up "Scanner berhasil diaktifkan"
             }).catch(err => {
                 console.error(err);
-                showToast('Gagal mengaktifkan scanner: ' + err, 'error');
+                // Tidak tampilkan pop up error start scanner
             });
         }
     });
@@ -145,7 +145,7 @@
                 isScanning = false;
                 document.getElementById('startScanner').disabled = false;
                 document.getElementById('stopScanner').disabled = true;
-                showToast('Scanner dihentikan', 'info');
+                // Tidak tampilkan pop up "Scanner dihentikan"
             }).catch(err => {
                 console.error(err);
             });
@@ -219,7 +219,7 @@
                 // Play success sound
                 playSound('success');
                 
-                // Auto-restart scanner after 3 seconds
+                // Auto-restart scanner after 3 seconds (sesuai permintaan user)
                 setTimeout(() => {
                     if (!isScanning) {
                         document.getElementById('startScanner').click();
@@ -234,7 +234,7 @@
                 `;
                 playSound('error');
                 
-                // Auto-restart scanner after 3 seconds
+                // Auto-restart scanner after 3 seconds (sesuai permintaan user)
                 setTimeout(() => {
                     if (!isScanning) {
                         document.getElementById('startScanner').click();
@@ -274,7 +274,7 @@
         audio.play().catch(e => console.log('Audio play failed:', e));
     }
 
-    // Toast notification
+    // Toast notification (tetap ada untuk keperluan lain jika diperlukan)
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = `toast align-items-center text-bg-${type} border-0`;
@@ -305,13 +305,14 @@
         });
     }
 
-    // Auto-start scanner on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            if (!isScanning) {
-                document.getElementById('startScanner').click();
-            }
-        }, 1000);
-    });
+    // Tidak auto-start scanner on page load
+    // Biarkan user yang memulai scanner manual
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     setTimeout(() => {
+    //         if (!isScanning) {
+    //             document.getElementById('startScanner').click();
+    //         }
+    //     }, 1000);
+    // });
 </script>
 @endpush
