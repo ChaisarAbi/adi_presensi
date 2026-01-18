@@ -88,9 +88,8 @@ class AttendanceController extends Controller
                 $status = 'Hadir Masuk';
                 $isLate = $now->greaterThan($jamMasuk->addMinutes(15)); // 15 minutes tolerance
 
-                if ($isLate) {
-                    $status = 'Terlambat';
-                }
+                // Tetap simpan sebagai Hadir Masuk meskipun terlambat
+                // Tidak ada status "Terlambat" dalam ENUM
 
                 $attendance = Attendance::create([
                     'student_id' => $student->id,
