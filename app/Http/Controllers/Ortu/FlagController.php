@@ -67,6 +67,8 @@ class FlagController extends Controller
         $validated['tanggal'] = now();
         $validated['status'] = 'Aktif';
         $validated['flagged_by'] = $user->id;
+        $validated['waktu_scan_pulang'] = null; // Not used for ortu flags
+        $validated['waktu_flag'] = now();
 
         Flag::create($validated);
 
