@@ -233,9 +233,14 @@
                 @endforelse
                 
                 <div class="text-center mt-3">
-                    <a href="#" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i> Ajukan Izin Baru
-                    </a>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ route('ortu.permissions.create') }}" class="btn btn-primary me-md-2 mb-2">
+                            <i class="bi bi-plus-circle me-1"></i> Ajukan Izin Baru
+                        </a>
+                        <a href="{{ route('ortu.permissions.index') }}" class="btn btn-outline-primary mb-2">
+                            <i class="bi bi-clock-history me-1"></i> Lihat Riwayat Izin
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -252,25 +257,25 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3 col-6">
-                        <a href="#" class="btn btn-primary w-100 py-3">
+                        <a href="{{ route('ortu.attendance.index') }}" class="btn btn-primary w-100 py-3">
                             <i class="bi bi-calendar-check display-6 d-block mb-2"></i>
                             Lihat Absensi
                         </a>
                     </div>
                     <div class="col-md-3 col-6">
-                        <a href="#" class="btn btn-success w-100 py-3">
-                            <i class="bi bi-graph-up display-6 d-block mb-2"></i>
-                            Grafik Kehadiran
+                        <a href="{{ route('ortu.charts.index') }}" class="btn btn-success w-100 py-3">
+                            <i class="bi bi-pie-chart display-6 d-block mb-2"></i>
+                            Distribusi Kehadiran
                         </a>
                     </div>
                     <div class="col-md-3 col-6">
-                        <a href="#" class="btn btn-info w-100 py-3">
+                        <a href="{{ route('ortu.permissions.create') }}" class="btn btn-info w-100 py-3">
                             <i class="bi bi-envelope-paper display-6 d-block mb-2"></i>
                             Ajukan Izin
                         </a>
                     </div>
                     <div class="col-md-3 col-6">
-                        <a href="#" class="btn btn-warning w-100 py-3">
+                        <a href="{{ route('ortu.flags.create') }}" class="btn btn-warning w-100 py-3">
                             <i class="bi bi-flag display-6 d-block mb-2"></i>
                             Flag Anak
                         </a>
