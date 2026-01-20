@@ -34,16 +34,31 @@ class DashboardController extends Controller
         // For simplicity, take first student
         $student = $students->first();
         
+        // Hitung hadir berdasarkan scan masuk saja (Hadir Masuk)
+        // Karena jika sudah scan masuk, wajib scan pulang - tidak perlu double counting
+        $hadirDays = $student->attendances()
+            ->where('status', 'Hadir Masuk')
+            ->distinct('tanggal')
+            ->count('tanggal');
+            
+        // Total kehadiran (hanya scan masuk, semua waktu)
+        $totalAttendance = $student->attendances()
+            ->where('status', 'Hadir Masuk')
+            ->distinct('tanggal')
+            ->count('tanggal');
+            
+        // Kehadiran bulan ini (hanya scan masuk)
+        $attendanceThisMonth = $student->attendances()
+            ->where('status', 'Hadir Masuk')
+            ->whereMonth('tanggal', $today->month)
+            ->whereYear('tanggal', $today->year)
+            ->distinct('tanggal')
+            ->count('tanggal');
+            
         $stats = [
-            'total_attendance' => $student->attendances()->count(),
-            'attendance_this_month' => $student->attendances()
-                ->whereMonth('tanggal', $today->month)
-                ->whereYear('tanggal', $today->year)
-                ->count(),
-            'hadir_count' => $student->attendances()
-                ->where('status', 'Hadir Masuk')
-                ->orWhere('status', 'Hadir Pulang')
-                ->count(),
+            'total_attendance' => $totalAttendance, // Hanya scan masuk
+            'attendance_this_month' => $attendanceThisMonth, // Hanya scan masuk bulan ini
+            'hadir_count' => $hadirDays, // Sekarang berdasarkan hari, bukan record
             'izin_count' => $student->permissions()
                 ->where('status', 'Disetujui')
                 ->count(),

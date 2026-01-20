@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Ortu;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\Holiday;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -55,10 +56,9 @@ class ChartController extends Controller
         $daysInMonth = Carbon::now()->daysInMonth;
         $monthlyData = [
             'labels' => [],
-            'present' => [],
-            'absent' => [],
-            'late' => [],
-            'permission' => []
+            'hadir' => [],
+            'izin' => [],
+            'tidak_hadir' => []
         ];
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -70,30 +70,31 @@ class ChartController extends Controller
             if ($attendance) {
                 switch ($attendance->status) {
                     case 'Hadir Masuk':
-                        // Check if late (after 07:00)
-                        $isLate = strtotime($attendance->waktu) > strtotime('07:00:00');
-                        $monthlyData['present'][] = $isLate ? 0 : 1;
-                        $monthlyData['late'][] = $isLate ? 1 : 0;
-                        $monthlyData['absent'][] = 0;
-                        $monthlyData['permission'][] = 0;
+                    case 'Hadir Pulang':
+                        $monthlyData['hadir'][] = 1;
+                        $monthlyData['izin'][] = 0;
+                        $monthlyData['tidak_hadir'][] = 0;
                         break;
                     case 'Izin':
-                        $monthlyData['present'][] = 0;
-                        $monthlyData['late'][] = 0;
-                        $monthlyData['absent'][] = 0;
-                        $monthlyData['permission'][] = 1;
+                        $monthlyData['hadir'][] = 0;
+                        $monthlyData['izin'][] = 1;
+                        $monthlyData['tidak_hadir'][] = 0;
+                        break;
+                    case 'Tidak Hadir':
+                        $monthlyData['hadir'][] = 0;
+                        $monthlyData['izin'][] = 0;
+                        $monthlyData['tidak_hadir'][] = 1;
                         break;
                     default:
-                        $monthlyData['present'][] = 0;
-                        $monthlyData['late'][] = 0;
-                        $monthlyData['absent'][] = 1;
-                        $monthlyData['permission'][] = 0;
+                        $monthlyData['hadir'][] = 0;
+                        $monthlyData['izin'][] = 0;
+                        $monthlyData['tidak_hadir'][] = 0;
                 }
             } else {
-                $monthlyData['present'][] = 0;
-                $monthlyData['late'][] = 0;
-                $monthlyData['absent'][] = 1;
-                $monthlyData['permission'][] = 0;
+                // Hari tanpa record tidak dihitung sebagai tidak hadir
+                $monthlyData['hadir'][] = 0;
+                $monthlyData['izin'][] = 0;
+                $monthlyData['tidak_hadir'][] = 0;
             }
         }
 
@@ -115,10 +116,9 @@ class ChartController extends Controller
         $daysOfWeek = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
         $weeklyData = [
             'labels' => $daysOfWeek,
-            'present' => array_fill(0, 7, 0),
-            'absent' => array_fill(0, 7, 0),
-            'late' => array_fill(0, 7, 0),
-            'permission' => array_fill(0, 7, 0)
+            'hadir' => array_fill(0, 7, 0),
+            'izin' => array_fill(0, 7, 0),
+            'tidak_hadir' => array_fill(0, 7, 0)
         ];
 
         foreach ($attendances as $attendance) {
@@ -126,18 +126,15 @@ class ChartController extends Controller
             
             switch ($attendance->status) {
                 case 'Hadir Masuk':
-                    $isLate = strtotime($attendance->waktu) > strtotime('07:00:00');
-                    if ($isLate) {
-                        $weeklyData['late'][$dayOfWeek]++;
-                    } else {
-                        $weeklyData['present'][$dayOfWeek]++;
-                    }
+                case 'Hadir Pulang':
+                    $weeklyData['hadir'][$dayOfWeek]++;
                     break;
                 case 'Izin':
-                    $weeklyData['permission'][$dayOfWeek]++;
+                    $weeklyData['izin'][$dayOfWeek]++;
                     break;
-                default:
-                    $weeklyData['absent'][$dayOfWeek]++;
+                case 'Tidak Hadir':
+                    $weeklyData['tidak_hadir'][$dayOfWeek]++;
+                    break;
             }
         }
 
@@ -145,48 +142,78 @@ class ChartController extends Controller
     }
 
     /**
-     * Get status distribution for pie chart.
+     * Get status distribution for pie chart (Semester ini).
      */
     private function getStatusDistribution($student)
     {
-        $startDate = Carbon::now()->subDays(30);
-        $endDate = Carbon::now();
+        // Semester ini: 6 bulan terakhir
+        $startDate = Carbon::now()->subMonths(6)->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
         
         $attendances = Attendance::where('student_id', $student->id)
             ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal')
             ->get();
 
         $distribution = [
-            'Hadir Tepat Waktu' => 0,
-            'Terlambat' => 0,
+            'Hadir' => 0,
             'Izin' => 0,
             'Tidak Hadir' => 0
         ];
 
-        foreach ($attendances as $attendance) {
-            switch ($attendance->status) {
-                case 'Hadir Masuk':
-                    $isLate = strtotime($attendance->waktu) > strtotime('07:00:00');
-                    if ($isLate) {
-                        $distribution['Terlambat']++;
-                    } else {
-                        $distribution['Hadir Tepat Waktu']++;
-                    }
-                    break;
-                case 'Izin':
-                    $distribution['Izin']++;
-                    break;
-                default:
-                    $distribution['Tidak Hadir']++;
+        // Group by tanggal (hari unik)
+        $attendanceByDate = $attendances->groupBy('tanggal');
+
+        foreach ($attendanceByDate as $date => $dayAttendances) {
+            // Tentukan status hari berdasarkan record yang ada
+            $dayStatus = $this->determineDayStatus($dayAttendances);
+            
+            if ($dayStatus && isset($distribution[$dayStatus])) {
+                $distribution[$dayStatus]++;
             }
         }
 
-        // Add days without any attendance as "Tidak Hadir"
-        $totalDays = 30;
-        $daysWithAttendance = $attendances->unique('tanggal')->count();
-        $distribution['Tidak Hadir'] += ($totalDays - $daysWithAttendance);
-
         return $distribution;
+    }
+
+    /**
+     * Determine the status of a day based on attendance records.
+     */
+    private function determineDayStatus($dayAttendances)
+    {
+        // Priority: Tidak Hadir > Izin > Hadir
+        // Jika ada record "Tidak Hadir", hari itu dianggap "Tidak Hadir"
+        // Jika ada record "Izin" (dan tidak ada "Tidak Hadir"), hari itu dianggap "Izin"
+        // Jika ada record "Hadir Masuk" atau "Hadir Pulang" (dan tidak ada "Tidak Hadir" atau "Izin"), hari itu dianggap "Hadir"
+        
+        $hasTidakHadir = false;
+        $hasIzin = false;
+        $hasHadir = false;
+
+        foreach ($dayAttendances as $attendance) {
+            switch ($attendance->status) {
+                case 'Tidak Hadir':
+                    $hasTidakHadir = true;
+                    break;
+                case 'Izin':
+                    $hasIzin = true;
+                    break;
+                case 'Hadir Masuk':
+                case 'Hadir Pulang':
+                    $hasHadir = true;
+                    break;
+            }
+        }
+
+        if ($hasTidakHadir) {
+            return 'Tidak Hadir';
+        } elseif ($hasIzin) {
+            return 'Izin';
+        } elseif ($hasHadir) {
+            return 'Hadir';
+        }
+
+        return null; // Tidak ada record yang valid
     }
 
     /**
@@ -205,14 +232,16 @@ class ChartController extends Controller
             $startDate = $date->copy()->startOfMonth();
             $endDate = $date->copy()->endOfMonth();
             
+            // Hitung hari dengan status Hadir (Masuk atau Pulang)
             $presentDays = Attendance::where('student_id', $student->id)
                 ->whereBetween('tanggal', [$startDate, $endDate])
-                ->where('status', 'Hadir Masuk')
+                ->whereIn('status', ['Hadir Masuk', 'Hadir Pulang'])
                 ->distinct('tanggal')
                 ->count('tanggal');
             
-            $totalDays = $startDate->diffInDays($endDate) + 1;
-            $attendanceRate = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
+            // Hitung hari sekolah aktif (Senin-Jumat, exclude libur)
+            $totalSchoolDays = Holiday::countSchoolDays($startDate, $endDate);
+            $attendanceRate = $totalSchoolDays > 0 ? round(($presentDays / $totalSchoolDays) * 100, 1) : 0;
             
             $attendanceRates[] = $attendanceRate;
         }
