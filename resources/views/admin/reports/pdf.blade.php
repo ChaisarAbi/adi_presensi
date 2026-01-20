@@ -155,10 +155,9 @@
                     <th class="nama">Nama Siswa</th>
                     <th class="jk">JK</th>
                     <th class="rombel">Rombel</th>
-                    <th class="count">Hadir</th>
-                    <th class="count">Izin</th>
-                    <th class="count">Tidak Hadir</th>
-                    <th class="count">Total Hari</th>
+                <th class="count">Hadir</th>
+                <th class="count">Izin</th>
+                <th class="count">Tidak Hadir</th>
                 </tr>
             </thead>
             <tbody>
@@ -172,7 +171,6 @@
                     <td>{{ $data['hadir'] }}</td>
                     <td>{{ $data['izin'] }}</td>
                     <td>{{ $data['tidak_hadir'] }}</td>
-                    <td>{{ $data['total_hari'] }}</td>
                 </tr>
                 @endforeach
             </tbody>

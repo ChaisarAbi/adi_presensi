@@ -69,17 +69,11 @@ class ReportController extends Controller
                 
                 $hadirDays = $hadirDates;
 
-                // Hitung hari sekolah aktif (Senin-Jumat, exclude libur) untuk bulan ini
-                $startDate = Carbon::create($tahun, $bulan, 1);
-                $endDate = Carbon::create($tahun, $bulan, 1)->endOfMonth();
-                $totalSchoolDays = Holiday::countSchoolDays($startDate, $endDate);
-
                 $reportData[] = [
                     'student' => $student,
                     'hadir' => $hadirDays,
                     'izin' => $izin,
                     'tidak_hadir' => $tidakHadir,
-                    'total_hari' => $totalSchoolDays,
                 ];
             }
 
@@ -155,17 +149,11 @@ class ReportController extends Controller
                 
                 $hadirDays = $hadirDates;
 
-                // Hitung hari sekolah aktif (Senin-Jumat, exclude libur) untuk bulan ini
-                $startDate = Carbon::create($tahun, $bulan, 1);
-                $endDate = Carbon::create($tahun, $bulan, 1)->endOfMonth();
-                $totalSchoolDays = Holiday::countSchoolDays($startDate, $endDate);
-
             $reportData[] = [
                 'student' => $student,
                 'hadir' => $hadirDays,
                 'izin' => $izin,
                 'tidak_hadir' => $tidakHadir,
-                'total_hari' => $totalSchoolDays,
             ];
         }
 
