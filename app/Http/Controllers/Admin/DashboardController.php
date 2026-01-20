@@ -8,6 +8,8 @@ use App\Models\Student;
 use App\Models\User;
 use App\Models\ClassSchedule;
 use App\Models\Attendance;
+use App\Models\Holiday;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -39,6 +41,17 @@ class DashboardController extends Controller
             ->groupBy('class_schedule_id')
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recent_attendances', 'class_distribution'));
+        // Check if today is a holiday
+        $today = Carbon::today()->toDateString();
+        $isHoliday = Holiday::where('tanggal', $today)->first();
+        $holidayInfo = $isHoliday ? [
+            'is_holiday' => true,
+            'keterangan' => $isHoliday->keterangan
+        ] : [
+            'is_holiday' => false,
+            'keterangan' => null
+        ];
+
+        return view('admin.dashboard', compact('stats', 'recent_attendances', 'class_distribution', 'holidayInfo'));
     }
 }

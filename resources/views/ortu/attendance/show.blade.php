@@ -57,15 +57,15 @@
                                         <label class="form-label text-muted">Status</label>
                                         <div class="form-control bg-light">
                                             @if($attendance->status == 'Hadir Masuk')
-                                                @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                    <span class="badge bg-warning">Terlambat</span>
-                                                @else
-                                                    <span class="badge bg-success">Hadir</span>
-                                                @endif
+                                                <span class="badge bg-success">Hadir</span>
+                                            @elseif($attendance->status == 'Hadir Pulang')
+                                                <span class="badge bg-info">Pulang</span>
                                             @elseif($attendance->status == 'Izin')
                                                 <span class="badge bg-info">Izin</span>
-                                            @else
+                                            @elseif($attendance->status == 'Tidak Hadir')
                                                 <span class="badge bg-danger">Tidak Hadir</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ $attendance->status }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -79,26 +79,29 @@
                                         <label class="form-label text-muted">Keterangan</label>
                                         <div class="form-control bg-light" style="min-height: 100px;">
                                             @if($attendance->status == 'Hadir Masuk')
-                                                @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                    <span class="text-warning">
-                                                        <i class="bi bi-clock-history me-1"></i>
-                                                        Terlambat {{ \Carbon\Carbon::parse($attendance->waktu)->diffInMinutes(\Carbon\Carbon::parse('07:00:00')) }} menit
-                                                    </span>
-                                                @else
-                                                    <span class="text-success">
-                                                        <i class="bi bi-check-circle me-1"></i>
-                                                        Hadir tepat waktu
-                                                    </span>
-                                                @endif
+                                                <span class="text-success">
+                                                    <i class="bi bi-check-circle me-1"></i>
+                                                    Hadir masuk
+                                                </span>
+                                            @elseif($attendance->status == 'Hadir Pulang')
+                                                <span class="text-info">
+                                                    <i class="bi bi-house-door me-1"></i>
+                                                    Hadir pulang
+                                                </span>
                                             @elseif($attendance->status == 'Izin')
                                                 <span class="text-info">
                                                     <i class="bi bi-envelope-paper me-1"></i>
                                                     Tidak hadir dengan izin
                                                 </span>
-                                            @else
+                                            @elseif($attendance->status == 'Tidak Hadir')
                                                 <span class="text-danger">
                                                     <i class="bi bi-x-circle me-1"></i>
                                                     Tidak hadir tanpa keterangan
+                                                </span>
+                                            @else
+                                                <span class="text-muted">
+                                                    <i class="bi bi-question-circle me-1"></i>
+                                                    {{ $attendance->status }}
                                                 </span>
                                             @endif
                                         </div>
@@ -160,30 +163,34 @@
                                     @if($todayAttendance)
                                         <div class="mb-3">
                                             @if($todayAttendance->status == 'Hadir Masuk')
-                                                @if(strtotime($todayAttendance->waktu) > strtotime('07:00:00'))
-                                                    <div class="display-4 text-warning">
-                                                        <i class="bi bi-clock-history"></i>
-                                                    </div>
-                                                    <h5 class="mt-2">Terlambat</h5>
-                                                    <p class="text-muted">Hari ini</p>
-                                                @else
-                                                    <div class="display-4 text-success">
-                                                        <i class="bi bi-check-circle"></i>
-                                                    </div>
-                                                    <h5 class="mt-2">Hadir</h5>
-                                                    <p class="text-muted">Hari ini</p>
-                                                @endif
+                                                <div class="display-4 text-success">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </div>
+                                                <h5 class="mt-2">Hadir</h5>
+                                                <p class="text-muted">Hari ini</p>
+                                            @elseif($todayAttendance->status == 'Hadir Pulang')
+                                                <div class="display-4 text-info">
+                                                    <i class="bi bi-house-door"></i>
+                                                </div>
+                                                <h5 class="mt-2">Pulang</h5>
+                                                <p class="text-muted">Hari ini</p>
                                             @elseif($todayAttendance->status == 'Izin')
                                                 <div class="display-4 text-info">
                                                     <i class="bi bi-envelope-paper"></i>
                                                 </div>
                                                 <h5 class="mt-2">Izin</h5>
                                                 <p class="text-muted">Hari ini</p>
-                                            @else
+                                            @elseif($todayAttendance->status == 'Tidak Hadir')
                                                 <div class="display-4 text-danger">
                                                     <i class="bi bi-x-circle"></i>
                                                 </div>
                                                 <h5 class="mt-2">Tidak Hadir</h5>
+                                                <p class="text-muted">Hari ini</p>
+                                            @else
+                                                <div class="display-4 text-secondary">
+                                                    <i class="bi bi-question-circle"></i>
+                                                </div>
+                                                <h5 class="mt-2">{{ $todayAttendance->status }}</h5>
                                                 <p class="text-muted">Hari ini</p>
                                             @endif
                                         </div>

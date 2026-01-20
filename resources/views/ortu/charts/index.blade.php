@@ -32,19 +32,19 @@
                             <strong>Informasi:</strong> Anda sedang melihat distribusi kehadiran untuk 
                             <strong>{{ $student->nama }}</strong> (Kelas: {{ $student->kelas }}, NIS: {{ $student->nis }})
                             <br>
-                            <small class="text-muted">Data berdasarkan 30 hari terakhir</small>
+                            <small class="text-muted">Data berdasarkan semester ini (6 bulan terakhir)</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Distribution Chart -->
+                                <!-- Distribution Chart -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card card-dashboard">
                             <div class="card-header">
                                 <h6 class="mb-0">
                                     <i class="bi bi-pie-chart me-2"></i>
-                                    Distribusi Kehadiran (30 Hari Terakhir)
+                                    Distribusi Kehadiran (Semester Ini)
                                 </h6>
                             </div>
                             <div class="card-body">
@@ -74,10 +74,8 @@
                                                         @endphp
                                                         <tr>
                                                             <td>
-                                                                @if($status == 'Hadir Tepat Waktu')
+                                                                @if($status == 'Hadir')
                                                                     <span class="badge bg-success">{{ $status }}</span>
-                                                                @elseif($status == 'Terlambat')
-                                                                    <span class="badge bg-warning">{{ $status }}</span>
                                                                 @elseif($status == 'Izin')
                                                                     <span class="badge bg-info">{{ $status }}</span>
                                                                 @else
@@ -88,8 +86,7 @@
                                                             <td>
                                                                 <div class="progress" style="height: 20px;">
                                                                     <div class="progress-bar 
-                                                                        @if($status == 'Hadir Tepat Waktu') bg-success
-                                                                        @elseif($status == 'Terlambat') bg-warning
+                                                                        @if($status == 'Hadir') bg-success
                                                                         @elseif($status == 'Izin') bg-info
                                                                         @else bg-danger
                                                                         @endif" 
@@ -124,13 +121,11 @@
                 <!-- Summary Cards -->
                 <div class="row mt-4">
                     @php
-                        $hadirTepatWaktu = $statusDistribution['Hadir Tepat Waktu'] ?? 0;
-                        $terlambat = $statusDistribution['Terlambat'] ?? 0;
+                        $hadir = $statusDistribution['Hadir'] ?? 0;
                         $izin = $statusDistribution['Izin'] ?? 0;
                         $tidakHadir = $statusDistribution['Tidak Hadir'] ?? 0;
                         
-                        $totalHadir = $hadirTepatWaktu + $terlambat;
-                        $persentaseHadir = $totalDays > 0 ? round(($totalHadir / $totalDays) * 100, 1) : 0;
+                        $persentaseHadir = $totalDays > 0 ? round(($hadir / $totalDays) * 100, 1) : 0;
                         $persentaseIzin = $totalDays > 0 ? round(($izin / $totalDays) * 100, 1) : 0;
                         $persentaseTidakHadir = $totalDays > 0 ? round(($tidakHadir / $totalDays) * 100, 1) : 0;
                     @endphp
@@ -140,8 +135,8 @@
                             <div class="card-body">
                                 <div class="row align-items-center">
                                     <div class="col">
-                                        <div class="text-success fw-bold text-uppercase mb-1">Kehadiran</div>
-                                        <div class="h2 mb-0">{{ $totalHadir }} hari</div>
+                                        <div class="text-success fw-bold text-uppercase mb-1">Hadir</div>
+                                        <div class="h2 mb-0">{{ $hadir }} hari</div>
                                         <div class="text-muted">{{ $persentaseHadir }}% dari total</div>
                                     </div>
                                     <div class="col-auto">
@@ -243,10 +238,9 @@ const distributionChart = new Chart(distributionCtx, {
         datasets: [{
             data: @json(array_values($statusDistribution)),
             backgroundColor: [
-                '#28a745', // Hadir Tepat Waktu
-                '#ffc107', // Terlambat
-                '#17a2b8', // Izin
-                '#dc3545'  // Tidak Hadir
+                '#28a745', // Hadir - hijau
+                '#17a2b8', // Izin - biru
+                '#dc3545'  // Tidak Hadir - merah
             ],
             borderWidth: 1
         }]

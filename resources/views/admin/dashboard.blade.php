@@ -3,6 +3,19 @@
 @section('title', 'Dashboard Admin')
 
 @section('content')
+@if($holidayInfo['is_holiday'])
+<div class="alert alert-warning alert-dismissible fade show" role="alert" id="holidayAlert">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-calendar-x me-2" style="font-size: 1.5rem;"></i>
+        <div>
+            <strong>Hari Ini Libur!</strong> {{ $holidayInfo['keterangan'] }}. 
+            <span class="d-block mt-1 small">Tidak ada kegiatan sekolah. Absensi tidak diperlukan.</span>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
 <div class="row">
     <!-- Statistik Cards -->
     <div class="col-xl-3 col-md-6 mb-4">
@@ -170,6 +183,34 @@
                         <a href="{{ route('admin.flags.index') }}" class="btn btn-warning w-100 py-3">
                             <i class="bi bi-flag display-6 d-block mb-2"></i>
                             Flagging
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Second Row of Quick Actions -->
+                <div class="row g-3 mt-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ route('admin.reports.index') }}" class="btn btn-danger w-100 py-3">
+                            <i class="bi bi-file-earmark-pdf display-6 d-block mb-2"></i>
+                            Export PDF
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ route('admin.gurus.index') }}" class="btn btn-secondary w-100 py-3">
+                            <i class="bi bi-person-badge display-6 d-block mb-2"></i>
+                            Data Guru
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ route('admin.ortus.index') }}" class="btn btn-dark w-100 py-3">
+                            <i class="bi bi-house-door display-6 d-block mb-2"></i>
+                            Data Ortu
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ route('admin.schedules.index') }}" class="btn btn-light w-100 py-3 border">
+                            <i class="bi bi-calendar-week display-6 d-block mb-2"></i>
+                            Jadwal Kelas
                         </a>
                     </div>
                 </div>

@@ -20,7 +20,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="card border-success">
                                 <div class="card-body text-center">
                                     <h6 class="text-muted mb-1">Hadir Masuk</h6>
@@ -28,7 +28,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="card border-info">
                                 <div class="card-body text-center">
                                     <h6 class="text-muted mb-1">Hadir Pulang</h6>
@@ -36,23 +36,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="card border-warning">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted mb-1">Terlambat</h6>
-                                    <h3 class="text-warning">{{ $attendances->where('status', 'Terlambat')->count() }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="card border-primary">
                                 <div class="card-body text-center">
-                                    <h6 class="text-muted mb-1">Izin Sakit</h6>
-                                    <h3 class="text-primary">{{ $sickStudents->count() }}</h3>
+                                    <h6 class="text-muted mb-1">Izin</h6>
+                                    <h3 class="text-primary">{{ $attendances->where('status', 'Izin')->count() }}</h3>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="card border-secondary">
                                 <div class="card-body text-center">
                                     <h6 class="text-muted mb-1">Belum Scan</h6>
@@ -60,11 +52,28 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
                             <div class="card border-danger">
                                 <div class="card-body text-center">
                                     <h6 class="text-muted mb-1">Total Absensi</h6>
-                                    <h3 class="text-danger">{{ $attendances->total() }}</h3>
+                                    <h3 class="text-danger">{{ $attendances->count() }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-1">Tidak Masuk</h6>
+                                    <h3 class="text-warning">
+                                        @php
+                                            // Hitung siswa dengan status Tidak Hadir saja
+                                            $tidakMasukCount = $attendances->where('status', 'Tidak Hadir')->count();
+                                        @endphp
+                                        {{ $tidakMasukCount }}
+                                    </h3>
                                 </div>
                             </div>
                         </div>
@@ -87,14 +96,14 @@
                             <tbody>
                                 @forelse($attendances as $attendance)
                                 <tr>
-                                    <td>{{ $loop->iteration + ($attendances->currentPage() - 1) * $attendances->perPage() }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <strong>{{ $attendance->student->nama }}</strong>
                                     </td>
                                     <td>{{ $attendance->student->nis }}</td>
                                     <td>
                                         <span class="badge bg-secondary">
-                                            {{ $attendance->student->classSchedule->kelas }}
+                                            {{ $attendance->student->classSchedule->kelas ?? '-' }}
                                         </span>
                                     </td>
                                     <td>
@@ -105,7 +114,6 @@
                                             $statusColors = [
                                                 'Hadir Masuk' => 'success',
                                                 'Hadir Pulang' => 'info',
-                                                'Terlambat' => 'warning',
                                                 'Izin' => 'primary',
                                                 'Tidak Hadir' => 'danger'
                                             ];
@@ -116,7 +124,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if($attendance->status === 'Hadir Masuk' || $attendance->status === 'Terlambat')
+                                        @if($attendance->status === 'Hadir Masuk')
                                             <span class="badge bg-success">Masuk</span>
                                         @elseif($attendance->status === 'Hadir Pulang')
                                             <span class="badge bg-info">Pulang</span>
@@ -126,7 +134,7 @@
                                     </td>
                                     <td>
                                         <small class="text-muted">
-                                            {{ $attendance->scannedBy->name ?? 'System' }}
+                                            {{ $attendance->scanner->name ?? 'System' }}
                                         </small>
                                     </td>
                                 </tr>
@@ -139,10 +147,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
-
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $attendances->links() }}
                     </div>
 
                     <!-- Students who haven't been scanned -->
@@ -196,13 +200,16 @@
                     </div>
                     @endif
 
-                    <!-- Students with sick permissions -->
-                    @if($sickStudents->count() > 0)
+                    <!-- Students with Izin -->
+                    @php
+                        $izinAttendances = $attendances->where('status', 'Izin');
+                    @endphp
+                    @if($izinAttendances->count() > 0)
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="card border-primary">
                                 <div class="card-header bg-primary text-white">
-                                    <h6 class="mb-0"><i class="bi bi-heart-pulse me-2"></i>Siswa Izin Sakit Hari Ini ({{ $sickStudents->count() }})</h6>
+                                    <h6 class="mb-0"><i class="bi bi-envelope-paper me-2"></i>Siswa Izin Hari Ini ({{ $izinAttendances->count() }})</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -213,33 +220,81 @@
                                                     <th>Siswa</th>
                                                     <th>NIS</th>
                                                     <th>Kelas</th>
-                                                    <th>Status</th>
-                                                    <th>Keterangan</th>
+                                                    <th>Waktu</th>
+                                                    <th>Scan Oleh</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($sickStudents as $student)
+                                                @foreach($izinAttendances as $attendance)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $student->nama }}</td>
-                                                    <td>{{ $student->nis }}</td>
+                                                    <td>{{ $attendance->student->nama }}</td>
+                                                    <td>{{ $attendance->student->nis }}</td>
                                                     <td>
                                                         <span class="badge bg-secondary">
-                                                            {{ $student->classSchedule->kelas ?? '-' }}
+                                                            {{ $attendance->student->classSchedule->kelas ?? '-' }}
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge bg-primary">Izin Sakit</span>
+                                                        <span class="badge bg-dark">{{ $attendance->waktu }}</span>
                                                     </td>
                                                     <td>
                                                         <small class="text-muted">
-                                                            @php
-                                                                $permission = \App\Models\Permission::where('student_id', $student->id)
-                                                                    ->whereDate('created_at', \Carbon\Carbon::today())
-                                                                    ->where('status', 'Disetujui')
-                                                                    ->first();
-                                                            @endphp
-                                                            {{ $permission->alasan ?? 'Tidak ada keterangan' }}
+                                                            {{ $attendance->scanner->name ?? 'System' }}
+                                                        </small>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Students with Tidak Hadir -->
+                    @php
+                        $tidakHadirAttendances = $attendances->where('status', 'Tidak Hadir');
+                    @endphp
+                    @if($tidakHadirAttendances->count() > 0)
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="bi bi-person-x me-2"></i>Siswa Tidak Hadir Hari Ini ({{ $tidakHadirAttendances->count() }})</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Siswa</th>
+                                                    <th>NIS</th>
+                                                    <th>Kelas</th>
+                                                    <th>Waktu</th>
+                                                    <th>Scan Oleh</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tidakHadirAttendances as $attendance)
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $attendance->student->nama }}</td>
+                                                    <td>{{ $attendance->student->nis }}</td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            {{ $attendance->student->classSchedule->kelas ?? '-' }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-dark">{{ $attendance->waktu }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">
+                                                            {{ $attendance->scanner->name ?? 'System' }}
                                                         </small>
                                                     </td>
                                                 </tr>

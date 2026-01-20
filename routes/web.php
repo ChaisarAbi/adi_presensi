@@ -19,6 +19,8 @@ use App\Http\Controllers\Ortu\BarcodeController as OrtuBarcodeController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\OrtuController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\HolidayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,6 +83,16 @@ Route::middleware(['auth'])->group(function () {
         // Ortu Routes
         Route::resource('ortus', OrtuController::class);
         
+        // Report Routes
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::post('/generate', [ReportController::class, 'generatePDF'])->name('generate');
+            Route::post('/preview', [ReportController::class, 'previewPDF'])->name('preview');
+        });
+        
+        // Holiday Routes
+        Route::resource('holidays', HolidayController::class);
+        
         // Tambahkan route admin lainnya di sini
     });
 
@@ -90,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Attendance Routes
         Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/', [GuruAttendanceController::class, 'today'])->name('index'); // Redirect to today's attendance
             Route::get('/scanner', [GuruAttendanceController::class, 'index'])->name('scanner');
             Route::post('/scan', [GuruAttendanceController::class, 'scan'])->name('scan');
             Route::get('/today', [GuruAttendanceController::class, 'today'])->name('today');

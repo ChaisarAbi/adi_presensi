@@ -238,6 +238,21 @@
             font-size: 0.85rem;
         }
         
+        /* Pagination fixes */
+        .pagination {
+            margin-bottom: 0;
+        }
+        .pagination .page-link {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            margin: 0 2px;
+        }
+        .pagination .bi {
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+        
         /* Alert fixes */
         .alert {
             padding: 12px 15px;
@@ -400,6 +415,9 @@
                     <a href="{{ route('admin.schedules.index') }}" class="{{ request()->is('admin/schedules*') ? 'active' : '' }}">
                         <i class="bi bi-calendar-week"></i> Jadwal Kelas
                     </a>
+                    <a href="{{ route('admin.holidays.index') }}" class="{{ request()->is('admin/holidays*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-x"></i> Hari Libur
+                    </a>
                     <a href="{{ route('admin.students.index') }}" class="{{ request()->is('admin/barcode*') ? 'active' : '' }}">
                         <i class="bi bi-qr-code-scan"></i> Barcode
                     </a>
@@ -408,6 +426,9 @@
                     </a>
                     <a href="{{ route('admin.flags.index') }}" class="{{ request()->is('admin/flags*') ? 'active' : '' }}">
                         <i class="bi bi-flag"></i> Flagging
+                    </a>
+                    <a href="{{ route('admin.reports.index') }}" class="{{ request()->is('admin/reports*') ? 'active' : '' }}">
+                        <i class="bi bi-file-earmark-pdf"></i> Laporan PDF
                     </a>
                 @endif
 
@@ -543,17 +564,6 @@
         }
         setInterval(updateTime, 1000);
 
-        // Auto-hide alerts
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.classList.remove('show');
-                    setTimeout(() => alert.remove(), 150);
-                }, 5000);
-            });
-        });
-
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
@@ -591,7 +601,7 @@
                     // Handle 419 Page Expired
                     if (response.status === 419) {
                         console.warn('CSRF token expired, redirecting to login');
-                        // Show notification
+                        // Show notification (persist - tidak auto hide)
                         const alertDiv = document.createElement('div');
                         alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
                         alertDiv.style.zIndex = '9999';
@@ -601,11 +611,6 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         `;
                         document.body.appendChild(alertDiv);
-                        
-                        // Auto logout after 3 seconds
-                        setTimeout(() => {
-                            document.getElementById('logout-form')?.submit();
-                        }, 3000);
                         
                         return Promise.reject(new Error('CSRF token expired'));
                     }

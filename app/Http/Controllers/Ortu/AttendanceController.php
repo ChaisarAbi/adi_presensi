@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Ortu;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\Holiday;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -24,9 +25,9 @@ class AttendanceController extends Controller
                 ->with('error', 'Anda belum terhubung dengan siswa manapun.');
         }
 
-        // Get attendance for the last 30 days
-        $startDate = Carbon::now()->subDays(30);
-        $endDate = Carbon::now();
+        // Get attendance for semester ini (6 bulan terakhir)
+        $startDate = Carbon::now()->subMonths(6)->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
         
         $attendances = Attendance::where('student_id', $student->id)
             ->whereBetween('tanggal', [$startDate, $endDate])
@@ -34,29 +35,37 @@ class AttendanceController extends Controller
             ->orderBy('waktu', 'desc')
             ->paginate(15);
 
-        // Statistics
-        $totalDays = 30;
-        $presentDays = Attendance::where('student_id', $student->id)
+        // Statistics - Hitung berdasarkan status aktual
+        $hadirDays = Attendance::where('student_id', $student->id)
             ->whereBetween('tanggal', [$startDate, $endDate])
-            ->where('status', 'Hadir Masuk')
+            ->whereIn('status', ['Hadir Masuk', 'Hadir Pulang'])
             ->distinct('tanggal')
             ->count('tanggal');
         
-        $lateDays = Attendance::where('student_id', $student->id)
+        $izinDays = Attendance::where('student_id', $student->id)
             ->whereBetween('tanggal', [$startDate, $endDate])
-            ->where('status', 'Hadir Masuk')
-            ->whereTime('waktu', '>', '07:00:00') // Assuming school starts at 07:00
+            ->where('status', 'Izin')
+            ->distinct('tanggal')
+            ->count('tanggal');
+        
+        $tidakHadirDays = Attendance::where('student_id', $student->id)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->where('status', 'Tidak Hadir')
             ->distinct('tanggal')
             ->count('tanggal');
 
-        $absentDays = $totalDays - $presentDays;
+        // Hitung hari sekolah aktif (Senin-Jumat, exclude libur)
+        $totalSchoolDays = Holiday::countSchoolDays($startDate, $endDate);
+        
+        // Attendance rate berdasarkan hari sekolah aktif
+        $attendanceRate = $totalSchoolDays > 0 ? round(($hadirDays / $totalSchoolDays) * 100, 1) : 0;
 
         $stats = [
-            'total_days' => $totalDays,
-            'present_days' => $presentDays,
-            'absent_days' => $absentDays,
-            'late_days' => $lateDays,
-            'attendance_rate' => $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0,
+            'total_days' => $totalSchoolDays, // Hari sekolah aktif
+            'hadir_days' => $hadirDays,
+            'izin_days' => $izinDays,
+            'tidak_hadir_days' => $tidakHadirDays,
+            'attendance_rate' => $attendanceRate,
         ];
 
         // Recent attendance (last 7 days)

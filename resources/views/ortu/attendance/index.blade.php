@@ -33,15 +33,31 @@
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card card-statistic bg-primary text-white">
+                        <div class="card card-statistic bg-success text-white">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
-                                        <i class="bi bi-calendar-check display-6"></i>
+                                        <i class="bi bi-check-circle display-6"></i>
                                     </div>
                                     <div>
-                                        <h5 class="mb-0">{{ $stats['present_days'] }}</h5>
-                                        <p class="mb-0">Hadir (30 hari)</p>
+                                        <h5 class="mb-0">{{ $stats['hadir_days'] }}</h5>
+                                        <p class="mb-0">Hadir</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card card-statistic bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-envelope-paper display-6"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0">{{ $stats['izin_days'] }}</h5>
+                                        <p class="mb-0">Izin</p>
                                     </div>
                                 </div>
                             </div>
@@ -53,10 +69,10 @@
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
-                                        <i class="bi bi-calendar-x display-6"></i>
+                                        <i class="bi bi-x-circle display-6"></i>
                                     </div>
                                     <div>
-                                        <h5 class="mb-0">{{ $stats['absent_days'] }}</h5>
+                                        <h5 class="mb-0">{{ $stats['tidak_hadir_days'] }}</h5>
                                         <p class="mb-0">Tidak Hadir</p>
                                     </div>
                                 </div>
@@ -65,23 +81,7 @@
                     </div>
                     
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card card-statistic bg-warning text-white">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <i class="bi bi-clock-history display-6"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-0">{{ $stats['late_days'] }}</h5>
-                                        <p class="mb-0">Terlambat</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card card-statistic bg-success text-white">
+                        <div class="card card-statistic bg-primary text-white">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -116,16 +116,16 @@
                                 @endphp
                                 <div class="col-md-4 col-sm-6 mb-3">
                                     <div class="card attendance-day-card 
-                                        @if($attendance && $attendance->status == 'Hadir Masuk') 
-                                            @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                border-warning
-                                            @else
-                                                border-success
-                                            @endif
+                                        @if($attendance && $attendance->status == 'Hadir Masuk')
+                                            border-success
+                                        @elseif($attendance && $attendance->status == 'Hadir Pulang')
+                                            border-info
                                         @elseif($attendance && $attendance->status == 'Izin')
                                             border-info
-                                        @else
+                                        @elseif($attendance && $attendance->status == 'Tidak Hadir')
                                             border-danger
+                                        @else
+                                            border-secondary
                                         @endif">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center">
@@ -136,16 +136,17 @@
                                                 <div class="text-end">
                                                     @if($attendance)
                                                         @if($attendance->status == 'Hadir Masuk')
-                                                            @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                                <span class="badge bg-warning">Terlambat</span>
-                                                            @else
-                                                                <span class="badge bg-success">Hadir</span>
-                                                            @endif
+                                                            <span class="badge bg-success">Hadir</span>
+                                                            <p class="mb-0 small">{{ $attendance->waktu }}</p>
+                                                        @elseif($attendance->status == 'Hadir Pulang')
+                                                            <span class="badge bg-info">Pulang</span>
                                                             <p class="mb-0 small">{{ $attendance->waktu }}</p>
                                                         @elseif($attendance->status == 'Izin')
                                                             <span class="badge bg-info">Izin</span>
-                                                        @else
+                                                        @elseif($attendance->status == 'Tidak Hadir')
                                                             <span class="badge bg-danger">Tidak Hadir</span>
+                                                        @else
+                                                            <span class="badge bg-secondary">{{ $attendance->status }}</span>
                                                         @endif
                                                     @else
                                                         <span class="badge bg-secondary">Belum Absen</span>
@@ -165,7 +166,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
                             <i class="bi bi-list-ul me-2"></i>
-                            Riwayat Absensi (30 Hari Terakhir)
+                            Riwayat Absensi (Semester Ini)
                         </h6>
                         <div>
                             <a href="{{ route('ortu.charts.index') }}" class="btn btn-primary btn-sm">
@@ -197,28 +198,28 @@
                                             <td>{{ $attendance->waktu }}</td>
                                             <td>
                                                 @if($attendance->status == 'Hadir Masuk')
-                                                    @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                        <span class="badge bg-warning">Terlambat</span>
-                                                    @else
-                                                        <span class="badge bg-success">Hadir</span>
-                                                    @endif
+                                                    <span class="badge bg-success">Hadir</span>
+                                                @elseif($attendance->status == 'Hadir Pulang')
+                                                    <span class="badge bg-info">Pulang</span>
                                                 @elseif($attendance->status == 'Izin')
                                                     <span class="badge bg-info">Izin</span>
-                                                @else
+                                                @elseif($attendance->status == 'Tidak Hadir')
                                                     <span class="badge bg-danger">Tidak Hadir</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $attendance->status }}</span>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if($attendance->status == 'Hadir Masuk')
-                                                    @if(strtotime($attendance->waktu) > strtotime('07:00:00'))
-                                                        <span class="text-warning">Terlambat {{ \Carbon\Carbon::parse($attendance->waktu)->diffInMinutes(\Carbon\Carbon::parse('07:00:00')) }} menit</span>
-                                                    @else
-                                                        <span class="text-success">Tepat waktu</span>
-                                                    @endif
+                                                    <span class="text-success">Hadir masuk</span>
+                                                @elseif($attendance->status == 'Hadir Pulang')
+                                                    <span class="text-info">Hadir pulang</span>
                                                 @elseif($attendance->status == 'Izin')
                                                     <span class="text-info">Dengan izin</span>
-                                                @else
+                                                @elseif($attendance->status == 'Tidak Hadir')
                                                     <span class="text-danger">Tanpa keterangan</span>
+                                                @else
+                                                    <span class="text-muted">{{ $attendance->status }}</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -272,8 +273,8 @@
                         <div class="alert alert-info mb-3">
                             <h6 class="alert-heading">Keterangan Status</h6>
                             <ul class="mb-0">
-                                <li><span class="badge bg-success">Hadir</span> - Hadir tepat waktu (sebelum 07:00)</li>
-                                <li><span class="badge bg-warning">Terlambat</span> - Hadir setelah jam 07:00</li>
+                                <li><span class="badge bg-success">Hadir</span> - Hadir masuk</li>
+                                <li><span class="badge bg-info">Pulang</span> - Hadir pulang</li>
                                 <li><span class="badge bg-info">Izin</span> - Tidak hadir dengan izin</li>
                                 <li><span class="badge bg-danger">Tidak Hadir</span> - Tidak hadir tanpa keterangan</li>
                             </ul>
@@ -286,7 +287,8 @@
                                 <li>Data absensi diupdate secara real-time oleh guru</li>
                                 <li>Jika ada ketidaksesuaian, hubungi guru/wali kelas</li>
                                 <li>Izin harus diajukan minimal 1 hari sebelumnya</li>
-                                <li>Terlambat lebih dari 3x dalam seminggu akan mendapat pemberitahuan</li>
+                                <li>Data berdasarkan semester ini (6 bulan terakhir)</li>
+                                <li><strong>Persentase kehadiran dihitung berdasarkan hari sekolah aktif (Senin-Jumat, kecuali hari libur)</strong></li>
                             </ul>
                         </div>
                     </div>

@@ -34,11 +34,6 @@ class AttendanceController extends Controller
             $today = $now->toDateString();
             $currentTime = $now->toTimeString();
 
-            // Check if student already has attendance for today
-            $existingAttendance = Attendance::where('student_id', $student->id)
-                ->whereDate('tanggal', $today)
-                ->first();
-
             $classSchedule = $student->classSchedule;
             if (!$classSchedule) {
                 return response()->json([
@@ -50,52 +45,24 @@ class AttendanceController extends Controller
             $jamMasuk = Carbon::parse($classSchedule->jam_masuk);
             $jamPulang = Carbon::parse($classSchedule->jam_pulang);
 
-            // Determine attendance type
-            if ($existingAttendance) {
-                // Already has attendance for today
-                if ($existingAttendance->status === 'Hadir Masuk') {
-                    // Check if it's time for pulang
-                    if ($now->greaterThanOrEqualTo($jamPulang)) {
-                        // Update to Hadir Pulang
-                        $existingAttendance->update([
-                            'status' => 'Hadir Pulang',
-                            'waktu' => $currentTime,
-                        ]);
-                        
-                        return response()->json([
-                            'success' => true,
-                            'message' => 'Absensi pulang berhasil untuk ' . $student->nama,
-                            'data' => [
-                                'student' => $student,
-                                'attendance' => $existingAttendance,
-                                'type' => 'pulang'
-                            ]
-                        ]);
-                    } else {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Belum waktunya pulang. Jam pulang: ' . $classSchedule->jam_pulang,
-                        ], 400);
-                    }
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Siswa sudah melakukan absensi hari ini dengan status: ' . $existingAttendance->status,
-                    ], 400);
-                }
-            } else {
-                // First attendance of the day
-                $status = 'Hadir Masuk';
-                $isLate = $now->greaterThan($jamMasuk->addMinutes(15)); // 15 minutes tolerance
+            // Check existing attendances for today
+            $existingAttendances = Attendance::where('student_id', $student->id)
+                ->whereDate('tanggal', $today)
+                ->get();
 
-                // Tetap simpan sebagai Hadir Masuk meskipun terlambat
-                // Tidak ada status "Terlambat" dalam ENUM
+            $hasMasuk = $existingAttendances->where('status', 'Hadir Masuk')->count() > 0;
+            $hasPulang = $existingAttendances->where('status', 'Hadir Pulang')->count() > 0;
+
+            // Determine attendance type
+            if (!$hasMasuk) {
+                // First scan of the day - Masuk
+                $isLate = $now->greaterThan($jamMasuk->addMinutes(15)); // 15 minutes tolerance
 
                 $attendance = Attendance::create([
                     'student_id' => $student->id,
                     'tanggal' => $today,
                     'waktu' => $currentTime,
-                    'status' => $status,
+                    'status' => 'Hadir Masuk',
                     'scanned_by' => auth()->id(),
                 ]);
 
@@ -109,6 +76,33 @@ class AttendanceController extends Controller
                         'is_late' => $isLate
                     ]
                 ]);
+            } elseif ($hasMasuk && !$hasPulang) {
+                // Already scanned masuk, now scanning pulang
+                // Allow pulang even if not yet jam pulang (for early dismissal)
+                
+                $attendance = Attendance::create([
+                    'student_id' => $student->id,
+                    'tanggal' => $today,
+                    'waktu' => $currentTime,
+                    'status' => 'Hadir Pulang',
+                    'scanned_by' => auth()->id(),
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Absensi pulang berhasil untuk ' . $student->nama,
+                    'data' => [
+                        'student' => $student,
+                        'attendance' => $attendance,
+                        'type' => 'pulang'
+                    ]
+                ]);
+            } else {
+                // Already has both masuk and pulang
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Siswa sudah melakukan absensi masuk dan pulang hari ini.',
+                ], 400);
             }
         } catch (\Exception $e) {
             \Log::error('Attendance scan error: ' . $e->getMessage(), [
@@ -130,10 +124,10 @@ class AttendanceController extends Controller
     public function today()
     {
         $today = Carbon::today()->toDateString();
-        $attendances = Attendance::with('student.classSchedule')
+        $attendances = Attendance::with(['student.classSchedule', 'scanner'])
             ->whereDate('tanggal', $today)
             ->orderBy('waktu', 'desc')
-            ->paginate(20);
+            ->get();
 
         // Get all students
         $allStudents = Student::with('classSchedule')->get();
@@ -145,20 +139,10 @@ class AttendanceController extends Controller
         
         // Get students who haven't been scanned at all today
         $notScannedStudents = $allStudents->whereNotIn('id', $attendedStudentIds);
-        
-        // Get students with approved sick permissions for today
-        $sickPermissions = \App\Models\Permission::whereDate('created_at', $today)
-            ->where('status', 'Disetujui')
-            ->with('student')
-            ->get();
-        
-        $sickStudentIds = $sickPermissions->pluck('student_id')->toArray();
-        $sickStudents = $allStudents->whereIn('id', $sickStudentIds);
 
         return view('guru.attendance.today', compact(
             'attendances', 
-            'notScannedStudents',
-            'sickStudents'
+            'notScannedStudents'
         ));
     }
 
