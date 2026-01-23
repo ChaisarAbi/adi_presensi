@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('students', function (Blueprint $table) {
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable()->after('nama');
-            $table->string('rombel')->nullable()->after('kelas');
+            $table->string('rombel')->nullable()->after('barcode');
         });
     }
 
