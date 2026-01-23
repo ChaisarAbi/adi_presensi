@@ -21,8 +21,11 @@ class DatabaseSeeder extends Seeder
             WalikelasSeeder::class,
             StudentSeeder::class,
             OrtuAccountSeeder::class,
+            HolidaySeeder::class,
             PermissionSeeder::class,
             FlagSeeder::class,
+            AttendanceDummySeeder::class,    // Data 5-19 Jan 2026
+            TwoWeekBackWithTodaySeeder::class, // Data 9-23 Jan 2026 (skip duplicate)
         ]);
     }
 }
